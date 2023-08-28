@@ -9,10 +9,10 @@ from curses_tools import draw_frame, read_controls, get_frame_size
 TIC_TIMEOUT = 0.1
 
 
-async def blink(canvas, row, column, symbol):
+async def blink(canvas, row, column, symbol, offset_tics):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        [await asyncio.sleep(0) for _ in range(random.randint(0, 8))]
+        [await asyncio.sleep(0) for _ in range(offset_tics)]
         canvas.addstr(row, column, symbol)
         [await asyncio.sleep(0) for _ in range(7)]
         canvas.addstr(row, column, symbol, curses.A_BOLD)
@@ -72,9 +72,11 @@ def draw(canvas):
     symbol_of_stars = '+*.:'
     for _ in range(150):
         coroutines.append(blink(
-            canvas, random.randint(1, height - 2),
+            canvas,
+            random.randint(1, height - 2),
             random.randint(1, length - 2),
-            symbol=random.choice(symbol_of_stars)
+            symbol=random.choice(symbol_of_stars),
+            offset_tics=random.randint(0, 8)
         ))
     while True:
         try:
