@@ -77,18 +77,6 @@ def draw(canvas):
                 coroutine.send(None)
             canvas.refresh()
             time.sleep(0.1)
-            for coroutine in coroutines:
-                coroutine.send(None)
-            canvas.refresh()
-            time.sleep(0.1)
-            for coroutine in coroutines:
-                coroutine.send(None)
-            canvas.refresh()
-            time.sleep(0.1)
-            for coroutine in coroutines:
-                coroutine.send(None)
-            canvas.refresh()
-            time.sleep(0.1)
         except StopIteration:
             coroutines.pop()
 
