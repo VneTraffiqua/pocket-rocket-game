@@ -53,13 +53,6 @@ async def animate_spaceship(canvas, row, column):
         draw_frame(canvas, row_position, column_position, item)
         await asyncio.sleep(0)
         draw_frame(canvas, row_position, column_position, item, negative=True)
-        rows_direction, columns_direction, space_pressed = read_controls(
-            canvas)
-        row = row + rows_direction
-        column = column + columns_direction
-        draw_frame(canvas, row_position, column_position, item)
-        await asyncio.sleep(0)
-        draw_frame(canvas, row_position, column_position, item, negative=True)
 
 
 def draw(canvas):
