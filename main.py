@@ -63,11 +63,12 @@ def draw(canvas):
     coroutines = []
     coroutines.append(animate_spaceship(canvas, row, column))
     symbol_of_stars = '+*.:'
+    border_width = 2
     for _ in range(150):
         coroutines.append(blink(
             canvas,
-            random.randint(1, height - 2),
-            random.randint(1, length - 2),
+            random.randint(1, height - border_width),
+            random.randint(1, length - border_width),
             symbol=random.choice(symbol_of_stars),
             offset_tics=random.randint(0, 8)
         ))
@@ -79,6 +80,7 @@ def draw(canvas):
             time.sleep(0.1)
         except StopIteration:
             coroutines.pop()
+            continue
 
 
 if __name__ == '__main__':
