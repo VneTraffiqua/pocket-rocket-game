@@ -74,7 +74,7 @@ def draw(canvas):
         ))
     while True:
         try:
-            for coroutine in coroutines:
+            for coroutine in coroutines.copy():
                 coroutine.send(None)
         except StopIteration:
             coroutines.remove(coroutine)
