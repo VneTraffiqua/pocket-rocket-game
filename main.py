@@ -76,11 +76,10 @@ def draw(canvas):
         try:
             for coroutine in coroutines:
                 coroutine.send(None)
-            canvas.refresh()
-            time.sleep(0.1)
         except StopIteration:
-            coroutines.pop()
-            continue
+            coroutines.remove(coroutine)
+        canvas.refresh()
+        time.sleep(0.1)
 
 
 if __name__ == '__main__':
