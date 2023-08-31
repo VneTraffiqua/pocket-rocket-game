@@ -73,11 +73,11 @@ def draw(canvas):
             offset_tics=random.randint(0, 8)
         ))
     while True:
-        try:
-            for coroutine in coroutines.copy():
+        for coroutine in coroutines.copy():
+            try:
                 coroutine.send(None)
-        except StopIteration:
-            coroutines.remove(coroutine)
+            except StopIteration:
+                coroutines.remove(coroutine)
         canvas.refresh()
         time.sleep(0.1)
 
