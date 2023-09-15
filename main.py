@@ -1,3 +1,4 @@
+import os
 import random
 import time
 import curses
@@ -5,8 +6,10 @@ import asyncio
 from itertools import cycle
 from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
+from space_garbage import fly_garbage
 
 TIC_TIMEOUT = 0.1
+TRASH_DIR = 'files/trash'
 
 
 async def blink(canvas, row, column, symbol, offset_tics):
@@ -19,6 +22,18 @@ async def blink(canvas, row, column, symbol, offset_tics):
         [await asyncio.sleep(0) for _ in range(2)]
         canvas.addstr(row, column, symbol)
         [await asyncio.sleep(0) for _ in range(4)]
+
+
+async def fill_orbit_with_garbage(canvas, length, offset_tics):
+    global coroutines
+    while True:
+        [await asyncio.sleep(0) for _ in range(offset_tics)]
+        with open(os.path.join(TRASH_DIR, random.choice(
+                os.listdir(TRASH_DIR)))) as garbage_file:
+            frame = garbage_file.read()
+        coroutines.append(
+                fly_garbage(canvas, random.randint(1, length), frame)
+        )
 
 
 async def animate_spaceship(canvas, row, column):
@@ -60,8 +75,11 @@ def draw(canvas):
     height, length = curses.window.getmaxyx(canvas)
     row, column = height, length
     canvas.border()
-    coroutines = []
+
+    global coroutines
     coroutines.append(animate_spaceship(canvas, row, column))
+    coroutines.append(fill_orbit_with_garbage(canvas, length, 10))
+
     symbol_of_stars = '+*.:'
     border_width = 2
     for _ in range(150):
@@ -72,6 +90,7 @@ def draw(canvas):
             symbol=random.choice(symbol_of_stars),
             offset_tics=random.randint(0, 8)
         ))
+
     while True:
         for coroutine in coroutines.copy():
             try:
@@ -83,6 +102,7 @@ def draw(canvas):
 
 
 if __name__ == '__main__':
+    coroutines = []
     curses.update_lines_cols()
     curses.wrapper(draw)
 
