@@ -1,5 +1,7 @@
 from curses_tools import draw_frame
 import asyncio
+import random
+
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
