@@ -12,22 +12,27 @@ TIC_TIMEOUT = 0.1
 TRASH_DIR = 'files/trash'
 
 
+async def sleep(tics=1):
+    for _ in range(tics):
+        await asyncio.sleep(0)
+
+
 async def blink(canvas, row, column, symbol, offset_tics):
     while True:
         canvas.addstr(row, column, symbol, curses.A_DIM)
-        [await asyncio.sleep(0) for _ in range(offset_tics)]
+        await sleep(offset_tics)
         canvas.addstr(row, column, symbol)
-        [await asyncio.sleep(0) for _ in range(7)]
+        await sleep(offset_tics)
         canvas.addstr(row, column, symbol, curses.A_BOLD)
-        [await asyncio.sleep(0) for _ in range(2)]
+        await sleep(offset_tics)
         canvas.addstr(row, column, symbol)
-        [await asyncio.sleep(0) for _ in range(4)]
+        await sleep(tics=1)
 
 
 async def fill_orbit_with_garbage(canvas, length, offset_tics):
     global coroutines
     while True:
-        [await asyncio.sleep(0) for _ in range(offset_tics)]
+        await sleep(offset_tics)
         with open(os.path.join(TRASH_DIR, random.choice(
                 os.listdir(TRASH_DIR)))) as garbage_file:
             frame = garbage_file.read()
@@ -66,7 +71,7 @@ async def animate_spaceship(canvas, row, column):
         row_position = max(1, row_position)
         column_position = max(1, column_position)
         draw_frame(canvas, row_position, column_position, item)
-        await asyncio.sleep(0)
+        await sleep(tics=1)
         draw_frame(canvas, row_position, column_position, item, negative=True)
 
 
@@ -74,7 +79,6 @@ def draw(canvas):
     curses.curs_set(False)
     height, length = curses.window.getmaxyx(canvas)
     row, column = height, length
-    canvas.border()
 
     global coroutines
     coroutines.append(animate_spaceship(canvas, row, column))
@@ -92,6 +96,7 @@ def draw(canvas):
         ))
 
     while True:
+        canvas.border()
         for coroutine in coroutines.copy():
             try:
                 coroutine.send(None)
