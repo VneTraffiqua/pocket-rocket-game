@@ -7,6 +7,8 @@ from itertools import cycle
 from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
 from space_garbage import fly_garbage
+from physics import update_speed
+
 
 TIC_TIMEOUT = 0.1
 TRASH_DIR = 'files/trash'
@@ -41,7 +43,8 @@ async def fill_orbit_with_garbage(canvas, length, offset_tics):
         )
 
 
-async def animate_spaceship(canvas, row, column):
+async def animate_spaceship(canvas):
+    global coroutines
     with open('./files/rocket_frame_1.txt', 'r') as rocket:
         rocket1 = rocket.read()
     with open('./files/rocket_frame_2.txt', 'r') as rocket:
@@ -54,12 +57,18 @@ async def animate_spaceship(canvas, row, column):
     row = window_height // 2 - rocket_height // 2
     column = window_length // 2 - rocket_length // 2
     border_size = 1
+    row_speed = column_speed = 0
 
     for item in cycle(iter_list):
         rows_direction, columns_direction, space_pressed = read_controls(
             canvas)
-        row = row + rows_direction
-        column = column + columns_direction
+        if space_pressed:
+            coroutines.append(fire(canvas, row, column + 2))
+        row_speed, column_speed = update_speed(
+            row_speed, column_speed, rows_direction, columns_direction
+        )
+        row = row + row_speed
+        column = column + column_speed
         row_position = min(
             window_height - rocket_height - border_size,
             row
@@ -81,7 +90,7 @@ def draw(canvas):
     row, column = height, length
 
     global coroutines
-    coroutines.append(animate_spaceship(canvas, row, column))
+    coroutines.append(animate_spaceship(canvas))
     coroutines.append(fill_orbit_with_garbage(canvas, length, 10))
 
     symbol_of_stars = '+*.:'
