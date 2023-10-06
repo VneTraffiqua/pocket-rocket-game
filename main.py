@@ -3,6 +3,7 @@ import random
 import time
 import curses
 import asyncio
+from obstacles import Obstacle, show_obstacles
 from itertools import cycle
 from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
@@ -62,8 +63,7 @@ async def animate_spaceship(canvas):
     for item in cycle(iter_list):
         rows_direction, columns_direction, space_pressed = read_controls(
             canvas)
-        if space_pressed:
-            coroutines.append(fire(canvas, row, column + 2))
+
         row_speed, column_speed = update_speed(
             row_speed, column_speed, rows_direction, columns_direction
         )
@@ -79,6 +79,8 @@ async def animate_spaceship(canvas):
         )
         row_position = max(1, row_position)
         column_position = max(1, column_position)
+        if space_pressed:
+            coroutines.append(fire(canvas, row_position, column_position + 2))
         draw_frame(canvas, row_position, column_position, item)
         await sleep(tics=1)
         draw_frame(canvas, row_position, column_position, item, negative=True)
@@ -87,9 +89,9 @@ async def animate_spaceship(canvas):
 def draw(canvas):
     curses.curs_set(False)
     height, length = curses.window.getmaxyx(canvas)
-    row, column = height, length
-
+    global obstacles
     global coroutines
+
     coroutines.append(animate_spaceship(canvas))
     coroutines.append(fill_orbit_with_garbage(canvas, length, 10))
 
@@ -117,7 +119,6 @@ def draw(canvas):
 
 if __name__ == '__main__':
     coroutines = []
+    obstacles = []
     curses.update_lines_cols()
     curses.wrapper(draw)
-
-
