@@ -7,7 +7,6 @@ from obstacles import Obstacle, show_obstacles
 from itertools import cycle
 from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
-from space_garbage import fly_garbage
 from physics import update_speed
 
 
@@ -18,6 +17,30 @@ TRASH_DIR = 'files/trash'
 async def sleep(tics=1):
     for _ in range(tics):
         await asyncio.sleep(0)
+
+
+async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
+    global obstacles
+    """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
+    rows_number, columns_number = canvas.getmaxyx()
+
+    column = max(column, 0)
+    column = min(column, columns_number - 1)
+
+    row = 0
+
+    garbage_height, garbage_width = get_frame_size(garbage_frame)
+    obstacle = Obstacle(row, column, garbage_height, garbage_width)
+    obstacles.append(obstacle)
+
+    while row < rows_number:
+        draw_frame(canvas, row, column, garbage_frame)
+        obstacle.row = row
+        obstacle.column = column
+        await asyncio.sleep(0)
+        draw_frame(canvas, row, column, garbage_frame, negative=True)
+        row += speed
+    obstacles.remove(obstacle)
 
 
 async def blink(canvas, row, column, symbol, offset_tics):
@@ -34,6 +57,7 @@ async def blink(canvas, row, column, symbol, offset_tics):
 
 async def fill_orbit_with_garbage(canvas, length, offset_tics):
     global coroutines
+    global obstacles
     while True:
         await sleep(offset_tics)
         with open(os.path.join(TRASH_DIR, random.choice(
@@ -42,6 +66,8 @@ async def fill_orbit_with_garbage(canvas, length, offset_tics):
         coroutines.append(
                 fly_garbage(canvas, random.randint(1, length), frame)
         )
+        obstacles_coroutine = show_obstacles(canvas, obstacles)
+        coroutines.append(obstacles_coroutine)
 
 
 async def animate_spaceship(canvas):
@@ -89,12 +115,10 @@ async def animate_spaceship(canvas):
 def draw(canvas):
     curses.curs_set(False)
     height, length = curses.window.getmaxyx(canvas)
-    global obstacles
-    global coroutines
 
+    global coroutines
     coroutines.append(animate_spaceship(canvas))
     coroutines.append(fill_orbit_with_garbage(canvas, length, 10))
-
     symbol_of_stars = '+*.:'
     border_width = 2
     for _ in range(150):
