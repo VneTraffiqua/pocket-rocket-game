@@ -5,13 +5,46 @@ import curses
 import asyncio
 from obstacles import Obstacle, show_obstacles
 from itertools import cycle
-from fire_animation import fire
 from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
 
 
 TIC_TIMEOUT = 0.1
 TRASH_DIR = 'files/trash'
+
+
+async def fire(
+        canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
+):
+
+    row, column = start_row, start_column
+
+    canvas.addstr(round(row), round(column), '*')
+    await asyncio.sleep(0)
+
+    canvas.addstr(round(row), round(column), 'O')
+    await asyncio.sleep(0)
+    canvas.addstr(round(row), round(column), ' ')
+
+    row += rows_speed
+    column += columns_speed
+
+    symbol = '-' if columns_speed else '|'
+
+    rows, columns = canvas.getmaxyx()
+    max_row, max_column = rows - 1, columns - 1
+
+    curses.beep()
+
+    while 0 < row < max_row and 0 < column < max_column:
+        canvas.addstr(round(row), round(column), symbol)
+        await asyncio.sleep(0)
+        canvas.addstr(round(row), round(column), ' ')
+        row += rows_speed
+        column += columns_speed
+        for obstacle in obstacles:
+            if obstacle.has_collision(row, column):
+                return
 
 
 async def sleep(tics=1):
