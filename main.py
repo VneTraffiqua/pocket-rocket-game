@@ -119,8 +119,10 @@ async def animate_spaceship(canvas):
 
     iter_list = [rocket1, rocket1, rocket2, rocket2]
 
-    row = window_height // 2 - rocket_height // 2
-    column = window_length // 2 - rocket_length // 2
+    start_row = window_height // 2 - rocket_height // 2
+    start_column = window_length // 2 - rocket_length // 2
+    row = start_row
+    column = start_column
     border_size = 1
     row_speed = column_speed = 0
 
@@ -148,6 +150,19 @@ async def animate_spaceship(canvas):
         draw_frame(canvas, row_position, column_position, item)
         await sleep(tics=1)
         draw_frame(canvas, row_position, column_position, item, negative=True)
+        for obstacle in OBSTACLES:
+            if obstacle.has_collision(row_position, column_position):
+                COROUTINES.append(show_game_over(canvas, start_row, start_column))
+                return
+
+
+async def show_game_over(canvas, center_row, center_column):
+    with open('files/game_over.txt', 'r') as game_over:
+        game_over_frame = game_over.read()
+    frame_rows, frame_columns = get_frame_size(game_over_frame)
+    while True:
+        draw_frame(canvas, center_row - frame_rows / 2, center_column - frame_columns / 2, game_over_frame)
+        await sleep()
 
 
 def draw(canvas):
