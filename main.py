@@ -7,6 +7,7 @@ from obstacles import Obstacle, show_obstacles
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
+from explosion import explode
 
 
 TIC_TIMEOUT = 0.1
@@ -72,6 +73,7 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
     while row < rows_number:
         if obstacle in OBSTACLES_IN_LAST_COLLISION:
             OBSTACLES_IN_LAST_COLLISION.remove(obstacle)
+            await explode(canvas, row, column)
             return
         draw_frame(canvas, row, column, garbage_frame)
         obstacle.row = row
@@ -177,7 +179,5 @@ def draw(canvas):
 
 
 if __name__ == '__main__':
-    # coroutines = []
-    # obstacles = []
     curses.update_lines_cols()
     curses.wrapper(draw)
