@@ -11,6 +11,9 @@ from physics import update_speed
 
 TIC_TIMEOUT = 0.1
 TRASH_DIR = 'files/trash'
+OBSTACLES_IN_LAST_COLLISION = []
+OBSTACLES = []
+COROUTINES = []
 
 
 async def fire(
@@ -35,15 +38,16 @@ async def fire(
     max_row, max_column = rows - 1, columns - 1
 
     curses.beep()
-
     while 0 < row < max_row and 0 < column < max_column:
         canvas.addstr(round(row), round(column), symbol)
         await asyncio.sleep(0)
         canvas.addstr(round(row), round(column), ' ')
         row += rows_speed
         column += columns_speed
-        for obstacle in obstacles:
+        for obstacle in OBSTACLES:
             if obstacle.has_collision(row, column):
+                OBSTACLES_IN_LAST_COLLISION.append(obstacle)
+                OBSTACLES.remove(obstacle)
                 return
 
 
@@ -53,7 +57,6 @@ async def sleep(tics=1):
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
-    global obstacles
     """Animate garbage, flying from top to bottom. Сolumn position will stay same, as specified on start."""
     rows_number, columns_number = canvas.getmaxyx()
 
@@ -64,16 +67,19 @@ async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
 
     garbage_height, garbage_width = get_frame_size(garbage_frame)
     obstacle = Obstacle(row, column, garbage_height, garbage_width)
-    obstacles.append(obstacle)
+    OBSTACLES.append(obstacle)
 
     while row < rows_number:
+        if obstacle in OBSTACLES_IN_LAST_COLLISION:
+            OBSTACLES_IN_LAST_COLLISION.remove(obstacle)
+            return
         draw_frame(canvas, row, column, garbage_frame)
         obstacle.row = row
         obstacle.column = column
         await asyncio.sleep(0)
         draw_frame(canvas, row, column, garbage_frame, negative=True)
         row += speed
-    obstacles.remove(obstacle)
+    OBSTACLES.remove(obstacle)
 
 
 async def blink(canvas, row, column, symbol, offset_tics):
@@ -89,22 +95,19 @@ async def blink(canvas, row, column, symbol, offset_tics):
 
 
 async def fill_orbit_with_garbage(canvas, length, offset_tics):
-    global coroutines
-    global obstacles
     while True:
         await sleep(offset_tics)
         with open(os.path.join(TRASH_DIR, random.choice(
                 os.listdir(TRASH_DIR)))) as garbage_file:
             frame = garbage_file.read()
-        coroutines.append(
+        COROUTINES.append(
                 fly_garbage(canvas, random.randint(1, length), frame)
         )
-        obstacles_coroutine = show_obstacles(canvas, obstacles)
-        coroutines.append(obstacles_coroutine)
+        # obstacles_coroutine = show_obstacles(canvas, obstacles)
+        # COROUTINES.append(obstacles_coroutine)
 
 
 async def animate_spaceship(canvas):
-    global coroutines
     with open('./files/rocket_frame_1.txt', 'r') as rocket:
         rocket1 = rocket.read()
     with open('./files/rocket_frame_2.txt', 'r') as rocket:
@@ -139,7 +142,7 @@ async def animate_spaceship(canvas):
         row_position = max(1, row_position)
         column_position = max(1, column_position)
         if space_pressed:
-            coroutines.append(fire(canvas, row_position, column_position + 2))
+            COROUTINES.append(fire(canvas, row_position, column_position + 2))
         draw_frame(canvas, row_position, column_position, item)
         await sleep(tics=1)
         draw_frame(canvas, row_position, column_position, item, negative=True)
@@ -149,13 +152,12 @@ def draw(canvas):
     curses.curs_set(False)
     height, length = curses.window.getmaxyx(canvas)
 
-    global coroutines
-    coroutines.append(animate_spaceship(canvas))
-    coroutines.append(fill_orbit_with_garbage(canvas, length, 10))
+    COROUTINES.append(animate_spaceship(canvas))
+    COROUTINES.append(fill_orbit_with_garbage(canvas, length, 10))
     symbol_of_stars = '+*.:'
     border_width = 2
     for _ in range(150):
-        coroutines.append(blink(
+        COROUTINES.append(blink(
             canvas,
             random.randint(1, height - border_width),
             random.randint(1, length - border_width),
@@ -165,17 +167,17 @@ def draw(canvas):
 
     while True:
         canvas.border()
-        for coroutine in coroutines.copy():
+        for coroutine in COROUTINES.copy():
             try:
                 coroutine.send(None)
             except StopIteration:
-                coroutines.remove(coroutine)
+                COROUTINES.remove(coroutine)
         canvas.refresh()
         time.sleep(0.1)
 
 
 if __name__ == '__main__':
-    coroutines = []
-    obstacles = []
+    # coroutines = []
+    # obstacles = []
     curses.update_lines_cols()
     curses.wrapper(draw)
