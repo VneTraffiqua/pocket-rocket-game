@@ -8,13 +8,14 @@ from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
 from explosion import explode
+from game_scenario import get_garbage_delay_tics, PHRASES
 
 
-TIC_TIMEOUT = 0.1
 TRASH_DIR = 'files/trash'
 OBSTACLES_IN_LAST_COLLISION = []
 OBSTACLES = []
 COROUTINES = []
+YEAR = 1957
 
 
 async def fire(
@@ -55,6 +56,18 @@ async def fire(
 async def sleep(tics=1):
     for _ in range(tics):
         await asyncio.sleep(0)
+
+
+async def show_year(canvas, max_row):
+    global YEAR
+    information_line = ''
+    while True:
+        if YEAR in PHRASES:
+            information_line = f' - {PHRASES[YEAR]}'
+        text_line = canvas.derwin(max_row - 2, 2)
+        text_line.addstr(f'Year: {YEAR}{information_line}')
+        YEAR += 1
+        await sleep(15)
 
 
 async def fly_garbage(canvas, column, garbage_frame, speed=0.5):
@@ -99,12 +112,14 @@ async def blink(canvas, row, column, symbol, offset_tics):
 async def fill_orbit_with_garbage(canvas, length, offset_tics):
     while True:
         await sleep(offset_tics)
-        with open(os.path.join(TRASH_DIR, random.choice(
-                os.listdir(TRASH_DIR)))) as garbage_file:
-            frame = garbage_file.read()
-        COROUTINES.append(
-                fly_garbage(canvas, random.randint(1, length), frame)
-        )
+        if get_garbage_delay_tics(YEAR):
+            await sleep(get_garbage_delay_tics(YEAR))
+            with open(os.path.join(TRASH_DIR, random.choice(
+                    os.listdir(TRASH_DIR)))) as garbage_file:
+                frame = garbage_file.read()
+            COROUTINES.append(
+                    fly_garbage(canvas, random.randint(1, length), frame)
+            )
         # obstacles_coroutine = show_obstacles(canvas, obstacles)
         # COROUTINES.append(obstacles_coroutine)
 
@@ -145,7 +160,7 @@ async def animate_spaceship(canvas):
         )
         row_position = max(1, row_position)
         column_position = max(1, column_position)
-        if space_pressed:
+        if space_pressed and YEAR > 2019:
             COROUTINES.append(fire(canvas, row_position, column_position + 2))
         draw_frame(canvas, row_position, column_position, item)
         await sleep(tics=1)
@@ -166,11 +181,12 @@ async def show_game_over(canvas, center_row, center_column):
 
 
 def draw(canvas):
+    global YEAR
     curses.curs_set(False)
     height, length = curses.window.getmaxyx(canvas)
-
+    COROUTINES.append(show_year(canvas, height))
     COROUTINES.append(animate_spaceship(canvas))
-    COROUTINES.append(fill_orbit_with_garbage(canvas, length, 10))
+    COROUTINES.append(fill_orbit_with_garbage(canvas, length, 1))
     symbol_of_stars = '+*.:'
     border_width = 2
     for _ in range(150):
