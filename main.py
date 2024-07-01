@@ -120,8 +120,6 @@ async def fill_orbit_with_garbage(canvas, length, offset_tics):
             COROUTINES.append(
                     fly_garbage(canvas, random.randint(1, length), frame)
             )
-        # obstacles_coroutine = show_obstacles(canvas, obstacles)
-        # COROUTINES.append(obstacles_coroutine)
 
 
 async def animate_spaceship(canvas):
