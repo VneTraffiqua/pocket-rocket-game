@@ -3,7 +3,7 @@ import random
 import time
 import curses
 import asyncio
-from obstacles import Obstacle, show_obstacles
+from obstacles import Obstacle
 from itertools import cycle
 from curses_tools import draw_frame, read_controls, get_frame_size
 from physics import update_speed
