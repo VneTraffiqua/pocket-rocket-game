@@ -106,15 +106,18 @@ async def blink(canvas, row, column, symbol, offset_tics):
 
 
 async def fill_orbit_with_garbage(canvas, length, offset_tics):
+    trash = []
+    for file_name in os.listdir(TRASH_DIR):
+        if os.path.isfile(os.path.join(TRASH_DIR, file_name)):
+            with open(os.path.join(TRASH_DIR, file_name), 'r') as rubbish:
+                trash.append(rubbish.read())
+
     while True:
         await sleep(offset_tics)
         if get_garbage_delay_tics(year):
             await sleep(get_garbage_delay_tics(year))
-            with open(os.path.join(TRASH_DIR, random.choice(
-                    os.listdir(TRASH_DIR)))) as garbage_file:
-                frame = garbage_file.read()
             coroutines.append(
-                    fly_garbage(canvas, random.randint(1, length), frame)
+                    fly_garbage(canvas, random.randint(1, length), random.choice(trash))
             )
 
 
