@@ -14,15 +14,9 @@ from game_scenario import get_garbage_delay_tics, PHRASES
 TRASH_DIR = 'files/trash'
 
 
-async def fire(
-        canvas, start_row, start_column, rows_speed=-0.3, columns_speed=0
-):
-
-    row, column = start_row, start_column
-
+async def fire(canvas, row, column, rows_speed=-0.3, columns_speed=0):
     canvas.addstr(round(row), round(column), '*')
     await asyncio.sleep(0)
-
     canvas.addstr(round(row), round(column), 'O')
     await asyncio.sleep(0)
     canvas.addstr(round(row), round(column), ' ')
